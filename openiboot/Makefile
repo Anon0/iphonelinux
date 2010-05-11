@@ -1,3 +1,5 @@
+PLATFORM=3G
+
 # Standard things
 .SUFFIXES:
 .SUFFIXES:	.c .s .o
