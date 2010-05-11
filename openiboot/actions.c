@@ -8,7 +8,6 @@
 #include "nand.h"
 #include "wdt.h"
 #include "dma.h"
-#include "radio.h"
 #include "syscfg.h"
 
 #define MACH_APPLE_IPHONE 1506
@@ -216,70 +215,9 @@ static void setup_cmdline_tag(const char * line)
 	params = tag_next(params);              /* move pointer to next tag */
 }
 
-static void setup_wifi_tags()
-{
-	uint8_t* mac;
-	uint32_t calSize;
-	uint8_t* cal;
-
-	if(radio_nvram_get(2, &mac) < 0)
-		return;
-
-	if((calSize = radio_nvram_get(1, &cal)) < 0)
-		return;
-
-	memcpy(&params->u.wifi.mac, mac, 6);
-	params->u.wifi.calSize = calSize;
-	memcpy(params->u.wifi.cal, cal, calSize);
-
-	params->hdr.tag = ATAG_IPHONE_WIFI;         /* iPhone NAND tag */
-	params->hdr.size = (sizeof(struct atag_header) + sizeof(struct atag_iphone_wifi) + calSize + 4) >> 2;
-	params = tag_next(params);              /* move pointer to next tag */
-}
-
-static void setup_mt_tags()
-{
-#ifndef CONFIG_IPHONE
-	uint8_t* prox_cal;
-	int prox_cal_size;
-
-	uint8_t* cal;
-	int cal_size;
-
-	prox_cal = syscfg_get_entry(SCFG_PxCl, &prox_cal_size);
-	if(!prox_cal)
-	{
-		return;
-	}
-
-	cal = syscfg_get_entry(SCFG_MtCl, &cal_size);
-	if(!cal)
-	{
-		return;
-	}
-
-	params->u.mt_cal.size = prox_cal_size;
-	memcpy(params->u.mt_cal.data, prox_cal, prox_cal_size);
-
-	params->hdr.tag = ATAG_IPHONE_PROX_CAL;
-	params->hdr.size = (sizeof(struct atag_header) + sizeof(struct atag_iphone_cal_data) + prox_cal_size + 4) >> 2;
-	params = tag_next(params);              /* move pointer to next tag */
-
-	params->u.mt_cal.size = cal_size;
-	memcpy(params->u.mt_cal.data, cal, cal_size);
-
-	params->hdr.tag = ATAG_IPHONE_MT_CAL;
-	params->hdr.size = (sizeof(struct atag_header) + sizeof(struct atag_iphone_cal_data) + cal_size + 4) >> 2;
-	params = tag_next(params);              /* move pointer to next tag */
-
-	bufferPrintf("Multi-touch calibration data installed.\r\n");
-#endif
-}
-
 static int rootfs_partition = 0;
 static char* rootfs_filename = NULL;
 
-#ifndef NO_HFS
 static void setup_iphone_nand_tag()
 {
 	int i;
@@ -305,7 +243,6 @@ static void setup_iphone_nand_tag()
 	params->hdr.size = tag_size(atag_iphone_nand);
 	params = tag_next(params);              /* move pointer to next tag */
 }
-#endif
 
 static void setup_end_tag()
 {
@@ -358,11 +295,7 @@ static void setup_tags(struct atag* parameters, const char* commandLine)
 		setup_initrd2_tag(INITRD_LOAD, ramdiskSize);
 	}
 	setup_cmdline_tag(commandLine);
-	setup_mt_tags();
-	setup_wifi_tags();
-#ifndef NO_HFS
 	setup_iphone_nand_tag();
-#endif
 	setup_end_tag();                    /* end of tags */
 }
 
@@ -402,7 +335,6 @@ void boot_linux(const char* args) {
 	    );
 }
 
-#ifndef NO_HFS
 void boot_linux_from_files()
 {
 	int size;
@@ -433,4 +365,3 @@ void boot_linux_from_files()
 
 	boot_linux("console=tty root=/dev/ram0 init=/init rw");
 }
-#endif

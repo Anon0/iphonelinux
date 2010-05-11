@@ -19,10 +19,8 @@
 #include "stb_image.h"
 #include "pmu.h"
 #include "nand.h"
-#include "radio.h"
 #include "hfs/fs.h"
 #include "ftl.h"
-#include "scripting.h"
 
 int globalFtlHasBeenRestored = 0; /* global variable to tell wether a ftl_restore has been done*/
 
@@ -240,8 +238,6 @@ int menu_setup(int timeout) {
 		framebuffer_setdisplaytext(TRUE);
 		framebuffer_clear();
 
-#ifndef NO_HFS
-		radio_setup();
 		nand_setup();
 		fs_setup();
 		if(globalFtlHasBeenRestored) /* if ftl has been restored, sync it, so kernel doesn't have to do a ftl_restore again */
@@ -257,9 +253,7 @@ int menu_setup(int timeout) {
 		}
 
 		pmu_set_iboot_stage(0);
-		startScripting("linux"); //start script mode if there is a script file
 		boot_linux_from_files();
-#endif
 	}
 
 	return 0;

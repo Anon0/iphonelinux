@@ -22,10 +22,7 @@
 #include "images.h"
 #include "syscfg.h"
 #include "nvram.h"
-#include "accel.h"
 #include "sdio.h"
-#include "wlan.h"
-#include "camera.h"
 #include "util.h"
 #include "commands.h"
 #include "framebuffer.h"
@@ -35,12 +32,8 @@
 #include "ftl.h"
 #include "hfs/bdev.h"
 #include "hfs/fs.h"
-#include "scripting.h"
 
-#include "radio.h"
-#include "wmcodec.h"
 #include "wdt.h"
-#include "als.h"
 
 int received_file_size;
 
@@ -69,8 +62,6 @@ void OpenIBootStart() {
 	framebuffer_setdisplaytext(TRUE);
 	framebuffer_clear();
 
-#ifndef SMALL
-#ifndef NO_STBIMAGE
 	const char* hideMenu = nvram_getvar("opib-hide-menu");
 	if(hideMenu && (strcmp(hideMenu, "1") == 0 || strcmp(hideMenu, "true") == 0)) {
 		bufferPrintf("Boot menu hidden. Use 'setenv opib-hide-menu false' and then 'saveenv' to unhide.\r\n");
@@ -83,16 +74,10 @@ void OpenIBootStart() {
 
 		menu_setup(menuTimeout);
 	}
-#endif
-#endif
 
 	startUSB();
 
-	radio_setup();
 	sdio_setup();
-	wlan_setup();
-	accel_setup();
-	als_setup();
 
 	nand_setup();
 #ifndef NO_HFS
@@ -100,14 +85,11 @@ void OpenIBootStart() {
 #endif
 
 	pmu_set_iboot_stage(0);
-	startScripting("openiboot"); //start script mode if there is a file
 	bufferPrintf("version: %s\r\n", OPENIBOOT_VERSION_STR);
 	bufferPrintf("-----------------------------------------------\r\n");
 	bufferPrintf("              WELCOME TO OPENIBOOT\r\n");
 	bufferPrintf("-----------------------------------------------\r\n");
 	DebugPrintf("                    DEBUG MODE\r\n");
-
-	audiohw_postinit();
 
 	// Process command queue
 	while(TRUE) {
@@ -404,10 +386,6 @@ static int setup_openiboot() {
 
 	lcd_setup();
 	framebuffer_setup();
-
-	audiohw_init();
-
-	camera_setup();
 
 	return 0;
 }
