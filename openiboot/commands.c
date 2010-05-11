@@ -198,35 +198,49 @@ void cmd_images_read(int argc, char** argv) {
 }
 
 void cmd_kernel(int argc, char** argv) {
+
+	// TODO: Check for valid kernel
+
 	uint32_t address;
 	uint32_t size;
 
-	if(argc < 3) {
-		address = 0x09000000;
-		size = received_file_size;
-	} else {
-		address = parseNumber(argv[1]);
-		size = parseNumber(argv[2]);
-	}
+	if( argc >= 2 ){
+		if(argc < 3) {
+			address = 0x09000000;
+			size = received_file_size;
+		} else {
+			address = parseNumber(argv[1]);
+			size = parseNumber(argv[2]);
+		}
 
-	set_kernel((void*) address, size);
-	bufferPrintf("Loaded kernel at %08x - %08x\r\n", address, address + size);
+		set_kernel((void*) address, size);
+		bufferPrintf("Loaded kernel at %08x - %08x\r\n", address, address + size);
+	} else {
+		bufferPrintf( "Error: No kernel specified!\n\r" );
+	}
 }
 
 void cmd_ramdisk(int argc, char** argv) {
+
+	// TODO: Check for valid ramdisk
+
 	uint32_t address;
 	uint32_t size;
 
-	if(argc < 3) {
-		address = 0x09000000;
-		size = received_file_size;
-	} else {
-		address = parseNumber(argv[1]);
-		size = parseNumber(argv[2]);
-	}
+	if( argc >= 2 ){ 
+		if(argc < 3) {
+			address = 0x09000000;
+			size = received_file_size;
+		} else {
+			address = parseNumber(argv[1]);
+			size = parseNumber(argv[2]);
+		}
 
-	set_ramdisk((void*) address, size);
-	bufferPrintf("Loaded ramdisk at %08x - %08x\r\n", address, address + size);
+		set_ramdisk((void*) address, size);
+		bufferPrintf("Loaded ramdisk at %08x - %08x\r\n", address, address + size);
+	} else {
+		bufferPrintf( "Error: No ramdisk specified!\n\r" );
+	}
 }
 
 void cmd_rootfs(int argc, char** argv) {
@@ -246,6 +260,9 @@ void cmd_rootfs(int argc, char** argv) {
 }
 
 void cmd_boot(int argc, char** argv) {
+
+	// TODO: Check to see if kernel has been loaded
+
 	char* arguments = "";
 
 	if(argc >= 2) {
