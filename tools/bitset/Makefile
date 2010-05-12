@@ -4,5 +4,6 @@ bitset:	bitset.o
 	gcc bitset.o -o bitset
 
 clean:
-	rm -f bitset
-	rm -f *.o
+	@echo "Cleaning up bitset.."
+	@rm -f bitset
+	@rm -f *.o

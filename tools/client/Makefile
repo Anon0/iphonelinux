@@ -21,7 +21,9 @@ linux:	$(LINUX_OBJS)
 	$(CC) $(CFLAGS) $(LINUX_OBJS) -lusb -lpthread -lncurses -o $@
 
 clean:
-	-rm *.o
-	-rm oibc
-	-rm loadibec
+	@echo "Cleaning up client.."
+	@rm -f *.o
+	@rm -f oibc
+	@rm -f loadibec
+	@rm -f linux
 

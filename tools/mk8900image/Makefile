@@ -1,3 +1,4 @@
+ARCH=x86_64-ubu10
 MKIMAGEOBJS=mk8900image.o
 LIBRARIES=-L/usr/lib -lm -ldl -lcrypto -lz -lpng
 CFLAGS +=
@@ -21,5 +22,6 @@ mk8900image:	$(MKIMAGEOBJS) $(LIBXPWN)
 	@$(CC) $(CFLAGS) $(MKIMAGEOBJS) $(LIBXPWN) $(LIBRARIES) -o $@
 
 clean:
+	@echo "Cleaning up mk8900image.."
 	@rm -f *.o
 	@rm -f mk8900image
