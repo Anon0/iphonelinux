@@ -2,7 +2,7 @@
 
 echo "Cleaning and building"
 # Just a script to compile th tools
-cd bitset/ && make clean && make && cd ..
+cd tools/bitset/ && make clean && make && cd ..
 cd client/ && make clean && make && cd ..
 cd mk8900image/ && make clean && make && cd ..
 
@@ -17,5 +17,5 @@ rm -f ../bin/bitset && cp bitset/bitset ../bin/bitset
 echo "Cleaning up."
 cd bitset/ && make clean && cd ..
 cd client/ && make clean && cd ..
-cd mk8900image/ && make clean && cd ..
+cd mk8900image/ && make clean && cd ../..
 echo "Done."

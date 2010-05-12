@@ -1,0 +1,15 @@
+#!/bin/bash
+
+printf "Cleaning Tools ... \n"
+# Now copy the binaries into the bin directory
+cd tools
+rm -f ../bin/mk8900image && cd mk8900image && make clean && cd ..
+rm -f ../bin/loadibec
+rm -f ../bin/oibc
+rm -f ../bin/linux && cd client/ && make clean && cd ..
+rm -f ../bin/bitset && cd bitset/ && make clean && cd ..
+printf "DONE!\n";
+printf "Cleaning openiboot ... ";
+cd ../openiboot && make clean & cd ..
+cd bin/images && rm -f *.* && cd ../../scripts
+printf "DONE!\n";
