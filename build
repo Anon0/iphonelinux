@@ -1,0 +1,70 @@
+#!/bin/bash
+
+if [ $1 == clean ]
+	then ./scripts/clean-all && exit;
+fi
+
+# builder script
+printf "Checking for arm-elf toolchain ... ";
+type -P arm-elf-c++filt &>/dev/null || { echo "I require arm-elf-c++filt but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-gcov &>/dev/null || { echo "I require arm-elf-gcov but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-readelf &>/dev/null || { echo "I require arm-elf-readelf but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-addr2line &>/dev/null || { echo "I require arm-elf-addr2line but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-cpp &>/dev/null || { echo "I require arm-elf-cpp but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-ld &>/dev/null || { echo "I require arm-elf-ld but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-size &>/dev/null || { echo "I require arm-elf-size but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-ar &>/dev/null || { echo "I require arm-elf-ar but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-g++ &>/dev/null || { echo "I require arm-elf-g++ but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-nm &>/dev/null || { echo "I require arm-elf-nm but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-strings &>/dev/null || { echo "I require arm-elf-strings but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-as &>/dev/null || { echo "I require arm-elf-as but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-gcc &>/dev/null || { echo "I require arm-elf-gcc but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-objcopy &>/dev/null || { echo "I require arm-elf-objcopy but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-strip &>/dev/null || { echo "I require arm-elf-strip but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-c++ &>/dev/null || { echo "I require arm-elf-c++ but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-gcc-4.1.1 &>/dev/null || { echo "I require arm-elf-gcc but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-objdump &>/dev/null || { echo "I require arm-elf-objdump but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-cc &>/dev/null || { echo "I require arm-elf-cc but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-gccbug &>/dev/null || { echo "I require arm-elf-gccbug but it's not installed.  Aborting." >&2; exit 1; }
+type -P arm-elf-ranlib &>/dev/null || { echo "I require arm-elf-ranlib but it's not installed.  Aborting." >&2; exit 1; }
+printf "Ok!\n";
+
+TOOLS_BUILT=YES
+
+echo "Checking for tools ...";
+if [ -e "bin/mk8900image" ] 
+	then echo "mk8900image Ok ... ";
+	else
+		echo "I need mk8900image ...";
+		TOOLS_BUILT=NO
+fi
+
+if [ -e "bin/oibc" ] 
+	then echo "oibc Ok ... ";
+	else
+		echo "I need oibc ...";
+		TOOLS_BUILT=NO
+fi
+
+if [ -e "bin/loadibec" ] 
+	then echo "loadibec Ok ... ";
+	else
+		echo "I need loadibec ...";
+		TOOLS_BUILT=NO
+fi
+
+if [ -e "bin/linux" ] 
+	then echo "linux Ok ... ( This is only a utility progam )";
+	else
+		echo "I need linux ... ( This is only a utility progam )";
+		TOOLS_BUILT=NO
+fi
+
+if [ $TOOLS_BUILT == NO ] 
+	then ./scripts/make-tools
+	else
+		echo "Tools ok, building openiboot ...";
+fi
+
+cd openiboot && make && cd ..
+echo "Done building openiboot ...";

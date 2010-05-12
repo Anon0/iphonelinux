@@ -10,6 +10,6 @@ rm -f ../bin/linux && cd client/ && make clean && cd ..
 rm -f ../bin/bitset && cd bitset/ && make clean && cd ..
 printf "DONE!\n";
 printf "Cleaning openiboot ... ";
-cd ../openiboot && make clean & cd ..
-cd bin/images && rm -f *.* && cd ../../scripts
+cd ../openiboot && make clean
+cd ../bin/images && rm -f *.* && cd ../..
 printf "DONE!\n";
