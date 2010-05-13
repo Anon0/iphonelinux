@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sudo apt-get install git-core texinfo libssl-dev libpng12-dev libusb-1.0-0-dev libreadline6-dev libreadline6 libusb-1.0-0 libpng12-0
