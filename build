@@ -60,6 +60,13 @@ if [ -e "bin/linux" ]
 		TOOLS_BUILT=NO
 fi
 
+if [ -e "bin/img3decrypt" ] 
+	then echo "img3decrypt Ok ...";
+	else
+		echo "I need img3decrypt ...";
+		TOOLS_BUILT=NO
+fi
+
 if [ $TOOLS_BUILT == NO ] 
 	then ./scripts/make-tools
 	else

@@ -8,6 +8,7 @@ rm -f ../bin/loadibec
 rm -f ../bin/oibc
 rm -f ../bin/linux && cd client/ && make clean && cd ..
 rm -f ../bin/bitset && cd bitset/ && make clean && cd ..
+rm -f ../bin/img3decrypt && cd img3decrypt/ && make clean && cd ..
 printf "DONE!\n";
 printf "Cleaning openiboot ... ";
 cd ../openiboot && make clean

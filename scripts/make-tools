@@ -5,6 +5,7 @@ echo "Cleaning and building"
 cd tools/bitset/ && make clean && make && cd ..
 cd client/ && make clean && make && cd ..
 cd mk8900image/ && make clean && make && cd ..
+cd img3decrypt/ && make clean && make && cd ..
 
 echo "Installing to ../bin"
 # Now copy the binaries into the bin directory
@@ -13,9 +14,11 @@ rm -f ../bin/loadibec && cp client/loadibec ../bin/loadibec
 rm -f ../bin/oibc && cp client/oibc ../bin/oibc
 rm -f ../bin/linux && cp client/linux ../bin/linux
 rm -f ../bin/bitset && cp bitset/bitset ../bin/bitset
+rm -f ../bin/img3decrypt && cp img3decrypt/img3decrypt ../bin/img3decrypt
 
 echo "Cleaning up."
 cd bitset/ && make clean && cd ..
 cd client/ && make clean && cd ..
+cd img3decrypt/ && make clean && cd ..
 cd mk8900image/ && make clean && cd ../..
 echo "Done."
