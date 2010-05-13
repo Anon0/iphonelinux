@@ -19,8 +19,14 @@
 #include "i2c.h"
 #include "hfs/fs.h"
 #include "aes.h"
+#include "accel.h"
 #include "sdio.h"
 #include "wdt.h"
+#include "wmcodec.h"
+#include "multitouch.h"
+#include "wlan.h"
+#include "radio.h"
+#include "als.h"
 
 void cmd_reboot(int argc, char** argv) {
 	Reboot();
@@ -198,49 +204,35 @@ void cmd_images_read(int argc, char** argv) {
 }
 
 void cmd_kernel(int argc, char** argv) {
-
-	// TODO: Check for valid kernel
-
 	uint32_t address;
 	uint32_t size;
 
-	if( argc >= 2 ){
-		if(argc < 3) {
-			address = 0x09000000;
-			size = received_file_size;
-		} else {
-			address = parseNumber(argv[1]);
-			size = parseNumber(argv[2]);
-		}
-
-		set_kernel((void*) address, size);
-		bufferPrintf("Loaded kernel at %08x - %08x\r\n", address, address + size);
+	if(argc < 3) {
+		address = 0x09000000;
+		size = received_file_size;
 	} else {
-		bufferPrintf( "Error: No kernel specified!\n\r" );
+		address = parseNumber(argv[1]);
+		size = parseNumber(argv[2]);
 	}
+
+	set_kernel((void*) address, size);
+	bufferPrintf("Loaded kernel at %08x - %08x\r\n", address, address + size);
 }
 
 void cmd_ramdisk(int argc, char** argv) {
-
-	// TODO: Check for valid ramdisk
-
 	uint32_t address;
 	uint32_t size;
 
-	if( argc >= 2 ){ 
-		if(argc < 3) {
-			address = 0x09000000;
-			size = received_file_size;
-		} else {
-			address = parseNumber(argv[1]);
-			size = parseNumber(argv[2]);
-		}
-
-		set_ramdisk((void*) address, size);
-		bufferPrintf("Loaded ramdisk at %08x - %08x\r\n", address, address + size);
+	if(argc < 3) {
+		address = 0x09000000;
+		size = received_file_size;
 	} else {
-		bufferPrintf( "Error: No ramdisk specified!\n\r" );
+		address = parseNumber(argv[1]);
+		size = parseNumber(argv[2]);
 	}
+
+	set_ramdisk((void*) address, size);
+	bufferPrintf("Loaded ramdisk at %08x - %08x\r\n", address, address + size);
 }
 
 void cmd_rootfs(int argc, char** argv) {
@@ -260,9 +252,6 @@ void cmd_rootfs(int argc, char** argv) {
 }
 
 void cmd_boot(int argc, char** argv) {
-
-	// TODO: Check to see if kernel has been loaded
-
 	char* arguments = "";
 
 	if(argc >= 2) {
@@ -779,6 +768,40 @@ void cmd_iic_write(int argc, char** argv) {
 	bufferPrintf("result: %d\r\n", error);
 }
 
+void cmd_accel(int argc, char** argv) {
+	int x = accel_get_x();
+	int y = accel_get_y();
+	int z = accel_get_z();
+	
+	bufferPrintf("x: %d, y: %d, z: %d\r\n", x, y, z);
+}
+
+void cmd_als(int argc, char** argv) {
+	bufferPrintf("data = %d\r\n", als_data());
+}
+
+void cmd_als_channel(int argc, char** argv) {
+	if(argc < 2)
+	{
+		bufferPrintf("usage: %s <channel>\r\n", argv[0]);
+		return;
+	}
+
+	int channel = parseNumber(argv[1]);
+	bufferPrintf("Setting als channel to %d\r\n", channel);
+	als_setchannel(channel);
+}
+
+void cmd_als_en(int argc, char** argv) {
+	bufferPrintf("Enabling ALS interrupt.\r\n");
+	als_enable_interrupt();
+}
+
+void cmd_als_dis(int argc, char** argv) {
+	bufferPrintf("Disabling ALS interrupt.\r\n");
+	als_disable_interrupt();
+}
+
 void cmd_sdio_status(int argc, char** argv) {
 	sdio_status();
 }
@@ -791,6 +814,247 @@ void cmd_sdio_setup(int argc, char** argv) {
 void cmd_wdt(int argc, char** argv)
 {
 	bufferPrintf("counter: %d\r\n", wdt_counter());
+}
+
+void cmd_audiohw_position(int argc, char** argv)
+{
+	bufferPrintf("playback position: %u / %u\r\n", audiohw_get_position(), audiohw_get_total());
+}
+
+void cmd_audiohw_pause(int argc, char** argv)
+{
+	audiohw_pause();
+	bufferPrintf("Paused.\r\n");
+}
+
+void cmd_audiohw_resume(int argc, char** argv)
+{
+	audiohw_resume();
+	bufferPrintf("Resumed.\r\n");
+}
+
+void cmd_audiohw_transfers_done(int argc, char** argv)
+{
+	bufferPrintf("transfers done: %d\r\n", audiohw_transfers_done());
+}
+
+void cmd_audiohw_play_pcm(int argc, char** argv)
+{
+	if(argc < 3) {
+		bufferPrintf("Usage: %s <address> <len> [use-headphones]\r\n", argv[0]);
+		return;
+	}
+
+	uint32_t address = parseNumber(argv[1]);
+	uint32_t len = parseNumber(argv[2]);
+	uint32_t useHeadphones = 0;
+
+	if(argc > 3)
+		useHeadphones = parseNumber(argv[3]);
+
+	if(useHeadphones)
+	{
+		bufferPrintf("playing PCM 0x%x - 0x%x using headphones\r\n", address, address + len);
+		audiohw_play_pcm((void*)address, len, FALSE);
+	} else
+	{
+		bufferPrintf("playing PCM 0x%x - 0x%x using speakers\r\n", address, address + len);
+		audiohw_play_pcm((void*)address, len, TRUE);
+	}
+}
+
+void cmd_audiohw_headphone_vol(int argc, char** argv)
+{
+	if(argc < 2)
+	{
+		bufferPrintf("%s <left> [right] (between 0:%d and 63:%d dB)\r\n", argv[0], audiohw_settings[SOUND_VOLUME].minval, audiohw_settings[SOUND_VOLUME].maxval);
+		return;
+	}
+
+	int left = parseNumber(argv[1]);
+	int right;
+
+	if(argc >= 3)
+		right = parseNumber(argv[2]);
+	else
+		right = left;
+
+	audiohw_set_headphone_vol(left, right);
+
+	bufferPrintf("Set headphone volumes to: %d / %d\r\n", left, right);
+}
+
+void cmd_audiohw_speaker_vol(int argc, char** argv)
+{
+	if(argc < 2)
+	{
+#ifdef CONFIG_3G
+		bufferPrintf("%s <loudspeaker volume> (between 0 and 100)\r\n", argv[0]);
+#else
+		bufferPrintf("%s <loudspeaker volume> [speaker volume] (between 0 and 100... 'speaker' is the one next to your ear)\r\n", argv[0]);
+#endif
+		return;
+	}
+
+	int vol = parseNumber(argv[1]);
+
+#ifdef CONFIG_3G
+	audiohw_set_speaker_vol(vol);
+	bufferPrintf("Set speaker volume to: %d\r\n", vol);
+#else
+	loudspeaker_vol(vol);
+
+	bufferPrintf("Set loudspeaker volume to: %d\r\n", vol);
+
+	if(argc > 2)
+	{
+		vol = parseNumber(argv[2]);
+		speaker_vol(vol);
+
+		bufferPrintf("Set speaker volume to: %d\r\n", vol);
+	}
+#endif
+}
+
+#ifdef CONFIG_3G
+void cmd_multitouch_setup(int argc, char** argv)
+{
+	if(argc < 3)
+	{
+		bufferPrintf("%s <constructed fw> <constructed fw len>\r\n", argv[0]);
+		return;
+	}
+
+	uint8_t* constructedFW = (uint8_t*) parseNumber(argv[1]);
+	uint32_t constructedFWLen = parseNumber(argv[2]);
+
+	multitouch_setup(constructedFW, constructedFWLen);
+}
+#else
+void cmd_multitouch_setup(int argc, char** argv)
+{
+	if(argc < 5)
+	{
+		bufferPrintf("%s <a-speed fw> <a-speed fw len> <main fw> <main fw len>\r\n", argv[0]);
+		return;
+	}
+
+	uint8_t* aspeedFW = (uint8_t*) parseNumber(argv[1]);
+	uint32_t aspeedFWLen = parseNumber(argv[2]);
+	uint8_t* mainFW = (uint8_t*) parseNumber(argv[3]);
+	uint32_t mainFWLen = parseNumber(argv[4]);
+
+	multitouch_setup(aspeedFW, aspeedFWLen, mainFW, mainFWLen);
+}
+#endif
+
+void cmd_wlan_prog_helper(int argc, char** argv) {
+	if(argc < 3) {
+		bufferPrintf("Usage: %s <address> <len>\r\n", argv[0]);
+		return;
+	}
+
+	uint32_t address = parseNumber(argv[1]);
+	uint32_t len = parseNumber(argv[2]);
+
+	wlan_prog_helper((void*) address, len);
+}
+
+void cmd_wlan_prog_real(int argc, char** argv) {
+	if(argc < 3) {
+		bufferPrintf("Usage: %s <address> <len>\r\n", argv[0]);
+		return;
+	}
+
+	uint32_t address = parseNumber(argv[1]);
+	uint32_t len = parseNumber(argv[2]);
+
+	wlan_prog_real((void*) address, len);
+}
+
+void cmd_radio_send(int argc, char** argv) {
+	if(argc < 2) {
+		bufferPrintf("Usage: %s <command>\r\n", argv[0]);
+		return;
+	}
+
+	radio_write(argv[1]);
+	radio_write("\r\n");
+	
+	char buf[100];
+	int c = radio_read(buf, sizeof(buf));
+	printf("radio reply: %s", buf);
+
+	while(c == (sizeof(buf) - 1))
+	{
+		c = radio_read(buf, sizeof(buf));
+		printf("%s", buf);
+	}
+
+	printf("\n");
+}
+
+void cmd_radio_nvram_list(int argc, char** argv) {
+	radio_nvram_list();
+}
+
+void cmd_radio_register(int argc, char** argv) {
+	bufferPrintf("Registering with cellular network...\r\n");
+	if(radio_register(10 * 1000) != 0)
+		bufferPrintf("Failed.\r\n");
+}
+
+void cmd_radio_call(int argc, char** argv) {
+	if(argc < 2) {
+		bufferPrintf("Usage: %s <phone number>\r\n", argv[0]);
+		return;
+	}
+
+	bufferPrintf("Calling %s...\r\n", argv[1]);
+
+	radio_call(argv[1]);
+}
+
+void cmd_radio_hangup(int argc, char** argv) {
+	radio_hangup(argv[1]);
+}
+
+void cmd_vibrator_loop(int argc, char** argv)
+{
+	if(argc < 4) {
+		bufferPrintf("Usage: %s <frequency 1-12> <period in ms> <time vibrator on during cycle in ms>\r\n", argv[0]);
+		return;
+	}
+
+	int frequency = parseNumber(argv[1]);
+	int period = parseNumber(argv[2]);
+	int timeOn = parseNumber(argv[3]);
+
+	bufferPrintf("Turning on vibrator at frequency %d in a %d ms cycle with %d duty time.\r\n", frequency, period, timeOn);
+
+	vibrator_loop(frequency, period, timeOn);
+}
+
+void cmd_vibrator_once(int argc, char** argv)
+{
+	if(argc < 3) {
+		bufferPrintf("Usage: %s <frequency 1-12> <duration in ms>\r\n", argv[0]);
+		return;
+	}
+
+	int frequency = parseNumber(argv[1]);
+	int time = parseNumber(argv[2]);
+
+	bufferPrintf("Turning on vibrator at frequency %d for %d ms.\r\n", frequency, time);
+
+	vibrator_once(frequency, time);
+}
+
+void cmd_vibrator_off(int argc, char** argv)
+{
+	bufferPrintf("Turning off vibrator.\r\n");
+
+	vibrator_off();
 }
 
 void cmd_help(int argc, char** argv) {
@@ -843,8 +1107,23 @@ OPIBCommand CommandList[] =
 		{"nor_erase", "erase a block of NOR", cmd_nor_erase},
 		{"iic_read", "read a IIC register", cmd_iic_read},
 		{"iic_write", "write a IIC register", cmd_iic_write},
+		{"accel", "display accelerometer data", cmd_accel},
+		{"als", "display ambient light sensor data", cmd_als},
+		{"als_channel", "set channel to get ALS data from", cmd_als_channel},
+		{"als_en", "enable continuous reporting of ALS data", cmd_als_en},
+		{"als_dis", "disable continuous reporting of ALS data", cmd_als_dis},
 		{"sdio_status", "display sdio registers", cmd_sdio_status},
 		{"sdio_setup", "restart SDIO stuff", cmd_sdio_setup},
+		{"wlan_prog_helper", "program wlan fw helper", cmd_wlan_prog_helper},
+		{"wlan_prog_real", "program wlan fw", cmd_wlan_prog_real},
+		{"radio_send", "send a command to the baseband", cmd_radio_send},
+		{"radio_nvram_list", "list entries in baseband NVRAM", cmd_radio_nvram_list},
+		{"radio_register", "register with a cellular network", cmd_radio_register},
+		{"radio_call", "make a call", cmd_radio_call},
+		{"radio_hangup", "hang up", cmd_radio_hangup},
+		{"vibrator_loop", "turn the vibrator on in a loop", cmd_vibrator_loop},
+		{"vibrator_once", "vibrate once", cmd_vibrator_once},
+		{"vibrator_off", "turn the vibrator off", cmd_vibrator_off},
 		{"images_list", "list the images available on NOR", cmd_images_list},
 		{"images_read", "read an image on NOR", cmd_images_read},
 		{"pmu_voltage", "get the battery voltage", cmd_pmu_voltage},
@@ -867,6 +1146,14 @@ OPIBCommand CommandList[] =
 		{"version", "display the version string", cmd_version},
 		{"time", "display the current time according to the RTC", cmd_time},
 		{"wdt", "display the current wdt stats", cmd_wdt},
+		{"audiohw_transfers_done", "display how many times the audio buffer has been played", cmd_audiohw_transfers_done},
+		{"audiohw_play_pcm", "queue some PCM data for playback", cmd_audiohw_play_pcm},
+		{"audiohw_headphone_vol", "set the headphone volume", cmd_audiohw_headphone_vol},
+		{"audiohw_speaker_vol", "set the speaker volume", cmd_audiohw_speaker_vol},
+		{"audiohw_position", "print the playback position", cmd_audiohw_position},
+		{"audiohw_pause", "pause playback", cmd_audiohw_pause},
+		{"audiohw_resume", "resume playback", cmd_audiohw_resume},
+		{"multitouch_setup", "setup the multitouch chip", cmd_multitouch_setup},
 		{"help", "list the available commands", cmd_help},
 		{NULL, NULL}
 	};
