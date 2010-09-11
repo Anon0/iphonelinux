@@ -115,18 +115,18 @@ int cUsbInterface::SendFile( string fname ){
 
 		// Needed a typecast
 		if(!libusb_control_transfer(handle, 0x21, 1, i, 0, (unsigned char*)&buffer[i * 0x800], size, 1000)) {
-			printf("send_file: error sending packet.\n");
+			cerr << "send_file: error sending packet." << endl;
 			return -1;
 		}
 
 		// Needed a typecast
 		if(libusb_control_transfer(handle, 0xA1, 3, 0, 0, (unsigned char*)response, 6, 1000) != 6) {
-			printf("send_file: error receiving status.\n");
+			cerr << "send_file: error receiving status." << endl;
 			return -1;
 
 		} else {
 			if(response[4] != 5) {
-				printf("send_file: invalid status.\n");
+				cerr << "send_file: invalid status." << endl;
 				return -1;
 			}
 		}
@@ -138,12 +138,12 @@ int cUsbInterface::SendFile( string fname ){
 	for(i = 6; i <= 8; i++) {
 		// Needed a typecast
 		if(libusb_control_transfer(handle, 0xA1, 3, 0, 0, (unsigned char*)response, 6, 1000) != 6) {
-			printf("send_file: error receiving status.\n");
+			cerr << "send_file: error receiving status.\n" << endl;
 			return -1;
 
 		} else {
 			if(response[4] != i) {
-				printf("send_file: invalid status.\n");
+				cerr << "send_file: invalid status." << endl;
 				return -1;
 			}
 		}

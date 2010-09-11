@@ -11,7 +11,7 @@ CPP=g++
 
 all:	iutil
 
-iutil: ${LOADIBEC_OBJS}
+iutil: ${OBJS}
 	$(CPP) $(CFLAGS) $(OBJS) $(LIBS) -o $@
 
 clean:
